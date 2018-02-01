@@ -111,7 +111,6 @@ export default class App extends Component {
 			chosenDiagnosis = sortedDiagnoses[0];
 			const temp = [...sortedDiagnoses]; // really wish that JS array .shift returned the shifted array (it doesn't)
 			temp.shift();
-			console.warn('the 0th array with item removed', temp[0]);
 			alternateDiagnoses = temp;
 		} else {
 			// Give a random diagnosis since none are more likely than others
