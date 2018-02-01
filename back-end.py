@@ -24,7 +24,7 @@ def update_diagnosis_count():
     form = request.get_json()
     selected_symptom = form['symptom']
     selected_diagnosis = form['diagnosis']
-    return jsonify(update_symptoms_list(selected_symptom, selected_diagnosis))
+    return jsonify(update_symptoms_list_count(selected_symptom, selected_diagnosis))
 
 # Helpers
 def get_symptoms_list(include=None):
@@ -41,14 +41,32 @@ def get_symptoms_list(include=None):
         return set_of_lists[include]
     return []
 
-def update_symptoms_list(selected_symptom, selected_diagnosis):
-    # f = open(DATABASE_FILE, "r")
-    # dataset_csv = csv.reader(f)
-    # for line in dataset_csv:
-    #     if line[0] == selected_symptom:
+def update_symptoms_list_count(selected_symptom, selected_diagnosis):
+    new_lines = []
+    with open(DATABASE_FILE, "rb") as f:
+        dataset_csv = csv.reader(f)
+        for line in dataset_csv:
+            new_line = []
+            if line[0] == selected_symptom:
+                print('found the db line with the symptom')
+                for item in line:
+                    if selected_diagnosis in item:
+                        print('found the db column with the diagnosis, incrementing count')
+                        new_item = item = item[:-1] + str(int(item[-1:]) + 1)
+                    else:
+                        new_item = item
+                    new_line.append(new_item)
+                new_lines.append(new_line)
+            else:
+                new_lines.append(line)
+        print(new_lines)
 
-    #     set_of_lists[line[0]] = [s.strip() for i,s in enumerate(line) if i != 0]
-    # f.close()
+    with open(DATABASE_FILE, 'wb') as f:
+        writer = csv.writer(f)
+        writer.writerows(new_lines)
+
+    return ['crack','open','a','cold','one']
+
 
 def make_master_symptoms_list():
     copy2(MASTER_SYMPTOMS_FILE, DATABASE_FILE)

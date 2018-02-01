@@ -122,11 +122,30 @@ export default class App extends Component {
 	}
 
 	handleDiagnosisCorrect(event) {
-		console.log('cool', event.target.dataset.diagnosis);
-		this.setState({
-			step: 'final',
-			finalDiagnosis: event.target.dataset.diagnosis
-		});
+		const selectedDiagnosis = event.target.dataset.diagnosis;
+
+		if (selectedDiagnosis) {
+			fetch(`${BASE_URL}/update_diagnosis_count`, {
+				method: 'POST',
+				headers: {
+					'content-type': 'application/json'
+				},
+				body: JSON.stringify({
+					symptom: this.state.symptomValue,
+					diagnosis: selectedDiagnosis
+				})
+			})
+			.then(value => value.json())
+			.then(res => {
+				console.log('server response', res);
+				if (res.length) {
+					this.setState({
+						step: 'final',
+						finalDiagnosis: selectedDiagnosis
+					});
+				}
+			})
+		}
 	}
 
 	handleDiagnosisWrong(event) {
@@ -191,7 +210,7 @@ export default class App extends Component {
 					Yep, that's me!
 				</button>
 				<button data-diagnosis={this.state.initialDiagnosis} onClick={this.handleDiagnosisWrong}>
-					I don't so.
+					I don't think so.
 				</button>
 			</div>
 		)
