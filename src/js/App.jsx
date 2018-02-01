@@ -101,29 +101,32 @@ export default class App extends Component {
 
 		let chosenDiagnosis;
 		let alternateDiagnoses;
+		const sortedDiagnoses = diagnosisList.sort((one, two) => { // sort and serve
+			const firstFrequency = parseInt(one[one.length - 1], 10);
+			const secondFrequency = parseInt(two[two.length - 1], 10);
+			return secondFrequency - firstFrequency;
+		});
 
 		if (anyDiagnosesMoreLikelyThanOthers) {
-			// sort and serve
-			const sortedDiagnoses = diagnosisList.sort((one, two) => {
-				const firstFrequency = parseInt(one[one.length - 1], 10);
-				const secondFrequency = parseInt(two[two.length - 1], 10);
-				return secondFrequency - firstFrequency;
-			});
 			chosenDiagnosis = sortedDiagnoses[0];
-			alternateDiagnoses = sortedDiagnoses.unshift();
+			const temp = [...sortedDiagnoses]; // really wish that JS array .shift returned the shifted array (it doesn't)
+			temp.shift();
+			console.warn('the 0th array with item removed', temp[0]);
+			alternateDiagnoses = temp;
 		} else {
 			// Give a random diagnosis since none are more likely than others
 			// Would be better to use a legit array-shuffling algorithm here
 			const randomIndex = Math.floor(Math.random() * diagnosisList.length);
-			chosenDiagnosis = diagnosisList[randomIndex];
-			diagnosisList.splice(randomIndex, 1);
-			alternateDiagnoses = diagnosisList
+			chosenDiagnosis = sortedDiagnoses[randomIndex];
+			const temp = [...sortedDiagnoses]; // really wish that JS array .splice returned the spliced array (it doesn't)
+			temp.splice(randomIndex, 1);
+			alternateDiagnoses = temp
 		}
 
 		this.setState({
 			step: 'initialDiagnosis',
 			initialDiagnosis: chosenDiagnosis,
-			alternateDiagnoses: diagnosisList
+			alternateDiagnoses: alternateDiagnoses
 		});
 	}
 
