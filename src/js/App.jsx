@@ -218,10 +218,10 @@ export default class App extends Component {
 					</span>
 				</h2>
 				<h3>Is this correct?</h3>
-				<button data-diagnosis={this.state.initialDiagnosis} onClick={this.handleDiagnosisCorrect}>
+				<button className="success" data-diagnosis={this.state.initialDiagnosis} onClick={this.handleDiagnosisCorrect}>
 					Yep, that's me!
 				</button>
-				<button data-diagnosis={this.state.initialDiagnosis} onClick={this.handleDiagnosisWrong}>
+				<button className="fail" data-diagnosis={this.state.initialDiagnosis} onClick={this.handleDiagnosisWrong}>
 					I don't think so.
 				</button>
 			</div>
@@ -237,7 +237,7 @@ export default class App extends Component {
 					this.state.alternateDiagnoses.map((diagnosis, index) => {
 						const diagnosisToDisplay = diagnosis.substring(0, diagnosis.length - 2);
 						return (
-							<div key={`alt_diagnosis_${index}`}>
+							<div key={`alt_diagnosis_${index}`} className="alternativeDiagnosisButtonContainer">
 								<button data-diagnosis={diagnosis} onClick={this.handleDiagnosisCorrect}>
 									{ diagnosisToDisplay }
 								</button>
