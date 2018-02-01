@@ -29,6 +29,7 @@ export default class App extends Component {
 		this.renderCurrentStep = this.renderCurrentStep.bind(this);
 		this.renderStart = this.renderStart.bind(this);
 		this.renderInitialDiagnosis = this.renderInitialDiagnosis.bind(this);
+		this.renderAlternateDiagnoses = this.renderAlternateDiagnoses.bind(this);
 	}
 
 	componentDidMount() {
@@ -99,6 +100,7 @@ export default class App extends Component {
 		});
 
 		let chosenDiagnosis;
+		let alternateDiagnoses;
 
 		if (anyDiagnosesMoreLikelyThanOthers) {
 			// sort and serve
@@ -108,16 +110,20 @@ export default class App extends Component {
 				return secondFrequency - firstFrequency;
 			});
 			chosenDiagnosis = sortedDiagnoses[0];
+			alternateDiagnoses = sortedDiagnoses.unshift();
 		} else {
 			// Give a random diagnosis since none are more likely than others
 			// Would be better to use a legit array-shuffling algorithm here
 			const randomIndex = Math.floor(Math.random() * diagnosisList.length);
 			chosenDiagnosis = diagnosisList[randomIndex];
+			diagnosisList.splice(randomIndex, 1);
+			alternateDiagnoses = diagnosisList
 		}
 
 		this.setState({
 			step: 'initialDiagnosis',
-			initialDiagnosis: chosenDiagnosis
+			initialDiagnosis: chosenDiagnosis,
+			alternateDiagnoses: diagnosisList
 		});
 	}
 
@@ -149,7 +155,11 @@ export default class App extends Component {
 	}
 
 	handleDiagnosisWrong(event) {
-		console.log('not cool', event.target.dataset.diagnosis);
+		const incorrectDiagnosis = event.target.dataset.diagnosis;
+		console.log('not cool', event.target.dataset.diagnosis, this.state.symptoms);
+		this.setState({
+			step: 'alternateDiagnoses'
+		});
 	}
 
 	restart() {
@@ -216,10 +226,33 @@ export default class App extends Component {
 		)
 	}
 
+	renderAlternateDiagnoses() {
+		return (
+			<div>
+				<h2>Sorry we couldn't figure out what is ailing you.</h2>
+				<h3>Do any of these sound correct?</h3>
+				{
+					this.state.alternateDiagnoses.map((diagnosis, index) => {
+						const diagnosisToDisplay = diagnosis.substring(0, diagnosis.length - 2);
+						return (
+							<div key={`alt_diagnosis_${index}`}>
+								<button data-diagnosis={diagnosis} onClick={this.handleDiagnosisCorrect}>
+									{ diagnosisToDisplay }
+								</button>
+							</div>
+						)
+					})
+				}
+			</div>
+		)
+	}
+
 	renderCurrentStep() {
 		switch(this.state.step) {
 			case 'initialDiagnosis':
 				return this.renderInitialDiagnosis();
+			case 'alternateDiagnoses':
+				return this.renderAlternateDiagnoses();
 			case 'final':
 				return this.renderFinal();
 			default:
