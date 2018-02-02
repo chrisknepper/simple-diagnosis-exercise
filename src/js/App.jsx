@@ -9,7 +9,8 @@ const initialState = {
 	symptoms: [],
 	initialDiagnosis: '',
 	alternateDiagnoses: [],
-	finalDiagnosis: ''
+	finalDiagnosis: '',
+	diagnosesForFinalReport: []
 }
 
 export default class App extends Component {
@@ -30,6 +31,8 @@ export default class App extends Component {
 		this.renderStart = this.renderStart.bind(this);
 		this.renderInitialDiagnosis = this.renderInitialDiagnosis.bind(this);
 		this.renderAlternateDiagnoses = this.renderAlternateDiagnoses.bind(this);
+		this.renderFinal = this.renderFinal.bind(this);
+		this.renderFinalReportDiagnosis = this.renderFinalReportDiagnosis.bind(this);
 	}
 
 	componentDidMount() {
@@ -49,7 +52,7 @@ export default class App extends Component {
 			fetch(`${BASE_URL}/full_list`)
 			.then(value => value.json())
 			.then((res) => {
-				console.log('value', Object.keys(res));
+				console.log('server response', res);
 				const defaultSelectOption = {
 					label: 'Symptoms...',
 					value: ''
@@ -66,7 +69,6 @@ export default class App extends Component {
 	}
 
 	handleSymptomSelect(event) {
-		console.log('the selected symptom is', event.target.value);
 		const selectedSymptom = event.target.value;
 		this.setState({
 			symptomValue: selectedSymptom
@@ -96,14 +98,14 @@ export default class App extends Component {
 
 	determineInitialDiagnosis(diagnosisList) {
 		const anyDiagnosesMoreLikelyThanOthers = diagnosisList.some((diagnosis) => {
-			return parseInt(diagnosis[diagnosis.length - 1], 10) !== 0;
+			return parseInt(diagnosis.substring(diagnosis.indexOf(':') + 1, diagnosis.length), 10) !== 0;
 		});
 
 		let chosenDiagnosis;
 		let alternateDiagnoses;
 		const sortedDiagnoses = diagnosisList.sort((one, two) => { // sort and serve
-			const firstFrequency = parseInt(one[one.length - 1], 10);
-			const secondFrequency = parseInt(two[two.length - 1], 10);
+			const firstFrequency = parseInt(one.substring(one.indexOf(':') + 1, one.length), 10);
+			const secondFrequency = parseInt(two.substring(two.indexOf(':') + 1, two.length), 10);
 			return secondFrequency - firstFrequency;
 		});
 
@@ -147,9 +149,14 @@ export default class App extends Component {
 			.then(res => {
 				console.log('server response', res);
 				if (res.length) {
+					const initialDiagnosisWithoutCount = selectedDiagnosis.substring(0, selectedDiagnosis.indexOf(':'));
+					const otherDiagnosesWithCounts = res.filter((item) => {
+						return item.indexOf(initialDiagnosisWithoutCount) === -1;
+					})
 					this.setState({
 						step: 'final',
-						finalDiagnosis: selectedDiagnosis
+						finalDiagnosis: selectedDiagnosis,
+						diagnosesForFinalReport: otherDiagnosesWithCounts
 					});
 				}
 			})
@@ -158,7 +165,6 @@ export default class App extends Component {
 
 	handleDiagnosisWrong(event) {
 		const incorrectDiagnosis = event.target.dataset.diagnosis;
-		console.log('not cool', event.target.dataset.diagnosis, this.state.symptoms);
 		this.setState({
 			step: 'alternateDiagnoses'
 		});
@@ -199,9 +205,19 @@ export default class App extends Component {
 		return (
 			<div>
 				<h2>
-					So it turns out you have <span className="finalDiagnosis">{this.state.finalDiagnosis.substring(0, this.state.finalDiagnosis.length - 2)}
+					So it turns out you have <span className="finalDiagnosis">{this.state.finalDiagnosis.substring(0, this.state.finalDiagnosis.indexOf(':'))} 😷
 					</span>
 				</h2>
+				<h3>Other people who had <span className="successText">{this.state.symptomValue}</span> have also been diagnosed with:</h3>
+				<table>
+					<thead>
+						<th>Condition</th>
+						<th>Number of Times Diagnosed</th>
+					</thead>
+					<tbody>
+						{ this.state.diagnosesForFinalReport.map(this.renderFinalReportDiagnosis) }
+					</tbody>
+				</table>
 				<h3>Feel better soon!</h3>
 				<button data-diagnosis={this.state.initialDiagnosis} onClick={this.restart}>
 					Start over
@@ -210,11 +226,23 @@ export default class App extends Component {
 		)
 	}
 
+	renderFinalReportDiagnosis(diagnosis) {
+		const name = diagnosis.substring(0, diagnosis.indexOf(':'));
+		const count = diagnosis.substring(diagnosis.indexOf(':') + 1, diagnosis.length);
+
+		return (
+			<tr key={`final_diagnosis_${name}_${count}`}>
+				<td>{ name }</td>
+				<td>{ count }</td>
+			</tr>
+		);
+	}
+
 	renderInitialDiagnosis() {
 		return (
 			<div>
 				<h2>
-					It sounds like you have <span className="initialDiagnosis">{this.state.initialDiagnosis.substring(0, this.state.initialDiagnosis.length - 2)}
+					It sounds like you have <span className="initialDiagnosis">{this.state.initialDiagnosis.substring(0, this.state.initialDiagnosis.indexOf(':'))}
 					</span>
 				</h2>
 				<h3>Is this correct?</h3>
@@ -231,11 +259,11 @@ export default class App extends Component {
 	renderAlternateDiagnoses() {
 		return (
 			<div>
-				<h2>Sorry we couldn't figure out what is ailing you.</h2>
+				<h2>Sorry we couldn't figure out what is ailing you. 😞</h2>
 				<h3>Do any of these sound correct?</h3>
 				{
 					this.state.alternateDiagnoses.map((diagnosis, index) => {
-						const diagnosisToDisplay = diagnosis.substring(0, diagnosis.length - 2);
+						const diagnosisToDisplay = diagnosis.substring(0, diagnosis.indexOf(':'));
 						return (
 							<div key={`alt_diagnosis_${index}`} className="alternativeDiagnosisButtonContainer">
 								<button data-diagnosis={diagnosis} onClick={this.handleDiagnosisCorrect}>
@@ -265,7 +293,7 @@ export default class App extends Component {
 	render() {
 		return (
 			<div>
-				<h1>Welcome to SimpleDiagnosis</h1>
+				<h1>👨‍⚕️ SimpleDiagnosis 👩‍⚕️</h1>
 				{ this.renderCurrentStep() }
 			</div>
 		);

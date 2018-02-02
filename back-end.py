@@ -65,7 +65,7 @@ def update_symptoms_list_count(selected_symptom, selected_diagnosis):
         writer = csv.writer(f)
         writer.writerows(new_lines)
 
-    return ['crack','open','a','cold','one']
+    return get_symptoms_list(selected_symptom)
 
 
 def make_master_symptoms_list():
