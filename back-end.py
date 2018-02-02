@@ -26,7 +26,8 @@ def update_diagnosis_count():
     selected_diagnosis = form['diagnosis']
     return jsonify(update_symptoms_list_count(selected_symptom, selected_diagnosis))
 
-# Helpers
+# Create, Read, Update, Delete
+# Only reading and updating implemented for this exercise
 def get_symptoms_list(include=None):
     f = open(DATABASE_FILE, "r")
     set_of_lists = {}
@@ -67,7 +68,7 @@ def update_symptoms_list_count(selected_symptom, selected_diagnosis):
 
     return get_symptoms_list(selected_symptom)
 
-
+# Helpers
 def make_master_symptoms_list():
     copy2(MASTER_SYMPTOMS_FILE, DATABASE_FILE)
 
@@ -100,6 +101,7 @@ def after_request(response):
   response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
   return response
 
+# Initialize
 if __name__ == "__main__":
     ensure_symptom_file_exists()
     app.run(port=1337)
